@@ -1,9 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
-using Core;
-using Core.Commands;
-using Core.Storage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -25,14 +19,6 @@ namespace Api31
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-
-            var startingData = JsonSerializer.Deserialize<List<CompanyModel>>(File.ReadAllText("StartingData.json"), new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-            });
-
-            services.AddTransient<ICommand<BuyoutRequest>, BuyoutCommand>();
-            services.AddSingleton<IStore>(new Store(startingData));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

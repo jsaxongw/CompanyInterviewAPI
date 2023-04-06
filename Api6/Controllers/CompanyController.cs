@@ -1,40 +1,45 @@
 using System.ComponentModel.DataAnnotations;
-using Core;
-using Core.Commands;
-using Core.Storage;
+using System.Text.Json;
+using Api6.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api6.Controllers
+namespace Api7.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class CompanyController : ControllerBase
     {
         private readonly ILogger<CompanyController> _logger;
-        private readonly IStore _dataStore;
-        private readonly ICommand<BuyoutRequest> _buyoutCommand;
 
-        public CompanyController(
-            ILogger<CompanyController> logger,
-            IStore dataStore,
-            ICommand<BuyoutRequest> buyoutCommand)
+        public CompanyController(ILogger<CompanyController> logger)
         {
             _logger = logger;
-            _dataStore = dataStore;
-            _buyoutCommand = buyoutCommand;
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult Get()
         {
-            return Ok(_dataStore.GetAll());
+            var startingData = JsonSerializer.Deserialize<List<CompanyModel>>(System.IO.File.ReadAllText("StartingData.json"), new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+            });
+
+            return Ok(startingData);
         }
 
         [HttpGet]
         [Route("{id}")]
         public IActionResult Get([Required] string id)
         {
-            var company = _dataStore.Get(id);
+            var startingData = JsonSerializer.Deserialize<List<CompanyModel>>(System.IO.File.ReadAllText("StartingData.json"), new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+            });
+
+            var data = new Dictionary<string, CompanyModel>(startingData.ToDictionary(company => company.Id));
+
+            var company = data[id];
+
             _logger.LogInformation("Retrieved Company {id}", id);
             return Ok(company);
         }
@@ -43,9 +48,23 @@ namespace Api6.Controllers
         [Route("/actions/buyout")]
         public IActionResult BuyoutCompany([FromBody] BuyoutRequest buyoutRequest)
         {
-            var result = _buyoutCommand.Execute(buyoutRequest);
+            var startingData = JsonSerializer.Deserialize<List<CompanyModel>>(System.IO.File.ReadAllText("StartingData.json"), new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+            });
 
-            return result.IsSuccessful ? Ok() : BadRequest(result.Errors);
+            var data = new Dictionary<string, CompanyModel>(startingData.ToDictionary(company => company.Id));
+
+            var parentCompany = data[buyoutRequest.ParentCompanyId];
+            var childCompany = data[buyoutRequest.ChildCompanyId];
+
+            childCompany.ParentId = parentCompany.Id;
+            childCompany.CompanyName += " Now Owned By " + parentCompany.CompanyName;
+            childCompany.Phone += ", " + parentCompany.Phone;
+
+            _logger.LogInformation("Buyout Succeeded Parent: {parent}, Child: {child}", parentCompany.Id, childCompany.Id);
+
+            return Ok();
         }
     }
 }

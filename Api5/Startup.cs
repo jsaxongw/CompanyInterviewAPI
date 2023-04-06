@@ -1,20 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Core;
-using Core.Commands;
-using Core.Storage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 namespace Api5
@@ -37,14 +25,6 @@ namespace Api5
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Api5", Version = "v1" });
             });
-
-            var startingData = JsonSerializer.Deserialize<List<CompanyModel>>(File.ReadAllText("StartingData.json"), new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-            });
-
-            services.AddTransient<ICommand<BuyoutRequest>, BuyoutCommand>();
-            services.AddSingleton<IStore>(new Store(startingData));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
