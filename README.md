@@ -24,4 +24,13 @@ Following on from that the code must do the following:
 
 All of these criteria should have tests against them
 
+# Known Issues:
+
+- The buyout API call doesn't work 
+
+# NFR
+
+- There is no requirement for the static file of data to be updated, in memory is acceptable for this objective 
+
+
 
